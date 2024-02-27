@@ -1,0 +1,118 @@
+# Use root/example as user/password credentials
+version: '3'
+
+networks:
+  front-net:
+    driver: bridge
+    driver_opts:
+      subnet: "172.33.1.0/24"
+      ip_range: "172.33.1.0/24"
+      gateway: "172.33.1.1"
+  back-net:
+    driver: bridge
+    driver_opts:
+      subnet: "172.66.1.0/24"
+      ip_range: "172.66.1.0/24"
+      gateway: "172.66.1.1"
+  jenkins-net:
+    driver: bridge
+    driver_opts:
+      subnet: "172.28.1.0/24"
+      ip_range: "172.28.1.0/24"
+      gateway: "172.28.1.1"
+  db-net:
+    driver: bridge
+    driver_opts:
+      subnet: "172.11.1.0/24"
+      ip_range: "172.11.1.0/24"
+      gateway: "172.11.1.1"
+  log-net:
+    driver: bridge
+    driver_opts:
+      subnet: "172.22.1.0/24"
+      ip_range: "172.22.1.0/24"
+      gateway: "172.22.1.1"
+
+services:
+  db:
+    container_name: mysqldb
+    image: mysql:8.0
+    networks:
+      - db-net
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - 9336:3306
+  loadbalancing:
+    container_name: nginx-proxy-lb
+    image: nginx
+    networks:
+      - front-net
+      - back-net
+    restart: always
+    ports:
+      - 9080:80
+  accessdb:
+    container_name: nginxdb
+    image: nginx:1.25.4-alpine
+    networks:
+      - back-net
+      - db-net
+    ports:
+      - 9070:80
+  accesslog:
+    container_name: nginxlog
+    image: nginx:1.25.4-alpine
+    networks:
+      - back-net
+      - log-net
+    ports:
+      - 9060:80
+  accessjenkins:
+    container_name: nginx-proxy-jenkins
+    image: nginx:latest
+    networks:
+      -jenkins-net
+    ports:
+      - 9010:80
+  web1:
+    container_name: server1
+    image: ubuntu:22.04
+    hostname: server1
+    networks:
+      - back-net
+      - jenkins-net
+    stdin_open: true
+  web2:
+    container_name: server2
+    image: ubuntu:22.04
+    hostname: server2
+    networks:
+      - back-net
+      - jenkins-net
+    stdin_open: true
+  web3:
+    container_name: server3
+    image: ubuntu:22.04
+    hostname: server3
+    networks:
+      - back-net
+      - jenkins-net
+    stdin_open: true
+  log:
+    container_name: logdisk
+    image: ubuntu:22.04
+    hostname: logdisk
+    networks:
+      - log-net
+    stdin_open: true
+  genkins:
+    container_name: jenkinshost
+    image: jenkins/jenkins:jdk17
+    networks:
+      - jenkins-net
+    ports:
+      - 9090:8080
