@@ -48,7 +48,7 @@ services:
       - 9336:3306
   loadbalancing:
     container_name: nginx-proxy-lb
-    image: nginx
+    image: nginx:latest
     networks:
       - front-net
       - back-net
@@ -57,7 +57,7 @@ services:
       - 9080:80
   accessdb:
     container_name: nginxdb
-    image: nginx:1.25.4-alpine
+    image: nginx:latest
     networks:
       - back-net
       - db-net
@@ -65,7 +65,7 @@ services:
       - 9070:80
   accesslog:
     container_name: nginxlog
-    image: nginx:1.25.4-alpine
+    image: nginx:latest
     networks:
       - back-net
       - log-net
@@ -75,7 +75,7 @@ services:
     container_name: nginx-proxy-jenkins
     image: nginx:latest
     networks:
-      -jenkins-net
+      - jenkins-net
     ports:
       - 9010:80
   web1:
